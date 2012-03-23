@@ -1,0 +1,83 @@
+                       CIS192 Project Proposal
+                       =======================
+
+Date: 2012-03-22 Thu
+
+
+
+Table of Contents
+=================
+1 Group 
+2 Problem 
+3 Features 
+4 Packages 
+5 Milestones 
+6 Responsibilities 
+    6.1 Nick 
+    6.2 Zach 
+
+
+1 Group 
+--------
+  - Nick Watson
+  - Zachary Wasserman (zwass)
+
+2 Problem 
+----------
+  We are building a system to encode hidden messages into images. As
+  discussed in CIS551 (Computer and Network Security), one can
+  slightly modify the pixels of an image in order to encode data,
+  without making changes visible to a casual observer. This process is
+  called "watermarking." By comparing to a reference image, the
+  receiver of a watermarked image can retrieve the hidden encoded
+  data.
+
+3 Features 
+-----------
+  - Encoding and decoding of hidden data in watermarked images
+  - Various styles of encoding, with options for tradeoffs between
+    secrecy and volume of encoded data
+  - Integration with online photo sharing/hosting to allow seamless
+    hidden message transmission
+  - (Maybe) GUI for experimenting with watermarking parameters
+
+4 Packages 
+-----------
+  - The core will rely on the Python Imaging Library
+    ([http://www.pythonware.com/products/pil/]) for image manipulation.
+  - Python Requests
+    ([http://docs.python-requests.org/en/v0.10.7/index.html]) for
+    interaction with web based photo APIs
+
+5 Milestones 
+-------------
+  - Basic watermarked encoding and decoding
+  - Additional watermarking schemes
+  - Integration with web-based image sharing
+  - (Maybe) GUI
+
+6 Responsibilities 
+-------------------
+
+6.1 Nick 
+=========
+   - Basic encoding/decoding
+   - Additional encoding schemes
+
+6.2 Zach 
+=========
+   - Basic encoding/decoding
+   - Web integration
+     
+
+
+
+
+
+
+
+
+
+
+
+
