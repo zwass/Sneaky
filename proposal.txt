@@ -19,7 +19,7 @@ Table of Contents
 
 1 Group 
 --------
-  - Nick Watson
+  - Nick Watson (nwatson)
   - Zachary Wasserman (zwass)
 
 2 Problem 

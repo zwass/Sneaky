@@ -14,7 +14,7 @@
 
 
 * Group
-  - Nick Watson
+  - Nick Watson (nwatson)
   - Zachary Wasserman (zwass)
 
 * Problem
