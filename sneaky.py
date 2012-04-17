@@ -30,7 +30,7 @@ class ImgEncoder:
             x = index / height
             y = index % height
             #add to the red channel
-            pix[x,y] = (pix[0,index][0] + bit, pix[0,index][1], pix[0,index][2])
+            pix[x,y] = (pix[x,y][0] + bit, pix[x,y][1], pix[x,y][2])
 
 
     def decode(self, orig_img):
@@ -58,13 +58,13 @@ class ImgEncoder:
         """Save the image as a .bmp file"""
         self.img.save(outfile, "BMP")
 
-def main(infile, outfile, msg):
-    orig_img = Image.open(infile)
+def main(inimgfile, outimgfile, intxt, outtxt):
+    orig_img = Image.open(inimgfile)
     encoder = ImgEncoder(orig_img.copy())
-    encoder.encode(msg)
-    encoder.save(outfile)
-    print encoder.decode(orig_img)
+    encoder.encode(open(intxt).read())
+    encoder.save(outimgfile)
+    #print encoder.decode(orig_img)
 
 if __name__ == "__main__":
     argv = sys.argv
-    main(argv[1], argv[2], " ".join(argv[3:]))
+    main(argv[1], argv[2], argv[3], argv[4])
