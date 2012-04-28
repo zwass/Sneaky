@@ -1,5 +1,4 @@
 import sys
-
 import Image
 
 def int_to_bin_str(number, width=8):
@@ -18,47 +17,40 @@ class ImgEncoder:
         """Initialize the encoder with an image"""
         self.img = img
 
-    def _modify_sum(self, pix_r, bit):
-        return pix_r + bit
-
-    def _modify_parity(self, pix_r, bit):
-        if bit == 0:
-            return pix_r & ~1
-        else:
-            return pix_r | 1
-
-    def encode(self, msg, parity):
+    def encode(self, msg_file):
         """Encodes the image with the message"""
-        method = self._modify_sum
-        if parity:
-            method = self._modify_parity
+        msg = None
+        with open(msg_file) as f:
+            msg = f.read()
+
         # pixel accessor
         pix = self.img.load()
         width, height = self.img.size
-        if width * height < len(msg) * 8:
+        if width * height < (2 + len(msg)) * 8:
             raise MessageTooLargeError
 
         # make bit list for offsets
         bits = [int_to_bin_str(ord(x)) for x in msg]
         bitstring = "".join(bits)
-        bitvals = [int(x) for x in bitstring]
+        bitvals = [bool(x) for x in bitstring]
 
-        if parity:
-            # This is so that the decode method encounters a
-            # null byte and stops.
-            bitvals.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+        # This is so that the decoder encounters a
+        # null byte and stops.
+        bitvals.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
         for index, bit in enumerate(bitvals):
             x = index / height
             y = index % height
-            # add to the red value
-            pix[x,y] = (method(pix[x,y][0], bit), pix[x,y][1], pix[x,y][2])
+            # modify the red value
+            pix_r = pix[x,y][0]
+            if bit:
+                pix_r |= 1
+            else:
+                pix_r &= ~1
+            pix[x,y] = (pix_r, pix[x,y][1], pix[x,y][2])
 
-    def decode(self, orig_img, parity):
-        """Takes an original image, and returns the decoded message"""
-        orig_pix = None
-        if not parity:
-            orig_pix = orig_img.load()
+    def decode(self):
+        """Returns the decoded message"""
         enc_pix = self.img.load()
 
         width, height = self.img.size
@@ -69,12 +61,8 @@ class ImgEncoder:
         for index in range(width * height):
             x = index / height
             y = index % height
-            if parity:
-                secret_bit = enc_pix[x, y][0] & 1
-                current_char += (secret_bit << mod_8)
-            else:
-                secret_bit = enc_pix[x, y][0] - orig_pix[x, y][0]
-                current_char += (secret_bit << mod_8)
+            secret_bit = enc_pix[x, y][0] & 1
+            current_char += (secret_bit << mod_8)
             if mod_8 == 0:
                 char = chr(current_char)
                 text += char
@@ -84,22 +72,7 @@ class ImgEncoder:
             else:
                 mod_8 -= 1
         return text
-        """
-        charbin = ""
-        msg = ""
-        for index in range(width * height):
-            x = index / height
-            y = index % height
-            charbin += str(enc_pix[x, y][0] - orig_pix[x, y][0])
-            if len(charbin) == 8:
-                char = chr(int(charbin, 2))
-                if char == '\0':
-                    break
-                msg += char
-                charbin = ""
-        return msg
-        """
-    
+
     def save(self, outfile):
         """Save the image as a .bmp file"""
         self.img.save(outfile, "BMP")
@@ -107,20 +80,20 @@ class ImgEncoder:
 def main_decode(encoded_img, out_file):
     print 'decoding...'
     decoder = ImgEncoder(Image.open(encoded_img))
+    print 'saving...'
     with open(out_file, 'wb') as f:
-        f.write(decoder.decode(None, True))
+        f.write(decoder.decode())
 
 def main_encode(plain_img, out_img, in_txt):
     print 'encoding...'
-    img = Image.open(plain_img)
-    encoder = ImgEncoder(img.copy())
-    encoder.encode(open(in_txt).read(), True)
+    encoder = ImgEncoder(Image.open(plain_img))
+    encoder.encode(in_txt)
     print 'saving...'
     encoder.save(out_img)
 
 def print_usage():
-    print 'USAGE: python sneaky.py encode plain_img out_img in_txt'
-    print '       python sneaky.py decode encoded_img out_file'
+    print 'USAGE: python watermark.py encode plain_img out_img in_txt'
+    print '       python watermark.py decode encoded_img out_file'
     sys.exit(1)
 
 if __name__ == "__main__":
