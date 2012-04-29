@@ -1,0 +1,38 @@
+Overview:
+
+We implemented modules that can do one of two things:
+   1. Encode messages onto images and post the images to Twitter; read the
+      image from Twitter and decode the message. (Zach)
+   2. Encrypt messages using RSA and encode them on an image; read the
+      image and decode/decrypt the message. (Nick)
+
+We would have integrated these, but due to a miscommunication and lack of
+time, they are separate features.
+
+Usage:
+
+1.
+
+2. To run the RSA encryption and encoding, you first need to generate a
+   keypair. To do this, run
+   
+     python genkeys.py pub_file priv_file
+
+   to save public and private keys to their respective files. To encode
+   the message, run
+
+     python watermark.py encode plain_img out_img in_txt pub_key
+
+   This will encrypt in_txt with pub_key and encode it onto a copy of
+   plain_img and save the resulting image to out_img.
+
+   To decode the message, run
+
+     python watermark.py decode encoded_img out_file priv_key
+
+   This will decode the message from encoded_img, decrypt it with priv_key,
+   and save it to out_file.
+
+Libraries:
+   PIL 1.1.7
+   PyCrypto 2.5
