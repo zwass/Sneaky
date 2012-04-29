@@ -99,10 +99,10 @@ class ImgEncoder:
                 charbin = ""
         return msg
         """
-    
+
     def save(self, outfile):
-        """Save the image as a .bmp file"""
-        self.img.save(outfile, "BMP")
+        """Save the image as a .png file"""
+        self.img.save(outfile, "PNG")
 
 def main_decode(encoded_img, out_file):
     print 'decoding...'
