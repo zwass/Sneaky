@@ -150,6 +150,15 @@ def main_encode(plain_img, out_img, in_txt, pub_key):
     print 'saving...'
     encoder.save(out_img)
 
+def get_key(keyfile):
+    """Parses the key from the file."""
+    try:
+        with open(keyfile, 'rU') as keyf:
+            return RSA.importKey(keyf.read())
+    except (IOError, ValueError, IndexError, TypeError):
+        print 'invalid public key file'
+        sys.exit(1)
+
 def print_usage():
     """Prints the usage"""
     print 'USAGE: python watermark.py encode plain_img out_img in_txt pub_key'
@@ -163,24 +172,18 @@ if __name__ == "__main__":
     if argv[1] == 'encode':
         if len(argv) != 6:
             print_usage()
-        public = None
+        public = get_key(argv[5])
         try:
-            with open(argv[5], 'rU') as pubfile:
-                public = RSA.importKey(pubfile.read())
-        except (ValueError, IndexError, TypeError):
-            print 'invalid public key file'
-            sys.exit(1)
-        main_encode(argv[2], argv[3], argv[4], public)
+            main_encode(argv[2], argv[3], argv[4], public)
+        except:
+            print 'Error encoding the message.'
     elif argv[1] == 'decode':
         if len(argv) != 5:
             print_usage()
-        private = None
+        private = get_key(argv[4])
         try:
-            with open(argv[4], 'rU') as privfile:
-                private = RSA.importKey(privfile.read())
-        except (ValueError, IndexError, TypeError):
-            print 'invalid private key file'
-            sys.exit(1)
-        main_decode(argv[2], argv[3], private)
+            main_decode(argv[2], argv[3], private)
+        except:
+            print 'Error decoding the message.'
     else:
         print_usage()
