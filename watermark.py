@@ -1,3 +1,5 @@
+"""A module for encrypting and watermarking images."""
+
 from Crypto.PublicKey import RSA
 import Image
 import sys
@@ -12,6 +14,7 @@ def int_to_bin_str(number, width):
     return formatted
 
 def _encrypt(chunk, pub_key):
+    """Encrypts a chunk and pads it to 128 bytes"""
     cipher = pub_key.encrypt(chunk, None)[0]
     size = KEY_SIZE / 8
     if len(cipher) < size:
@@ -20,10 +23,13 @@ def _encrypt(chunk, pub_key):
     return cipher
 
 def encrypt(path, pub_key):
+    """Encrypts the contents of a file and returns a list of
+    encrypted chunks."""
     text = None
     with open(path, 'rU') as f:
         text = f.read()
 
+    # Chunk the file into segments of 127 bytes
     chunks = []
     for lower in range(0, len(text), MAX_BITS):
         upper = lower + MAX_BITS
@@ -31,6 +37,7 @@ def encrypt(path, pub_key):
     return [_encrypt(chunk, pub_key) for chunk in chunks]
 
 class MessageTooLargeError(Exception):
+    """Exception thrown when the message is too large for the image."""
     pass
 
 class ImgEncoder:
@@ -41,21 +48,23 @@ class ImgEncoder:
         self.img = img
 
     def encode(self, msg_file, pub_key):
-        """Encodes the image with the message"""
+        """Encrypts the message and encodes it in the image."""
         ciphertext = encrypt(msg_file, pub_key)
+        # Need to encode number of chunks for reading
         num_chunks = [int(b) for b in int_to_bin_str(len(ciphertext), 32)]
         ciphertext = ''.join(ciphertext)
 
-        # pixel accessor
+        # Pixel accessor
         pix = self.img.load()
         width, height = self.img.size
         if width * height < len(ciphertext) * 8 + 32:
             raise MessageTooLargeError
 
+        # Write the number of chunks to the image
         for index, bit in enumerate(num_chunks):
             x = index / height
             y = index % height
-            # modify the red value
+            # modify the red value's parity
             pix_r = pix[x,y][0]
             if bit:
                 pix_r |= 1
@@ -68,11 +77,12 @@ class ImgEncoder:
         bitstring = "".join(bits)
         bitvals = [int(x) for x in bitstring]
 
+        # Write the serialized ciphertext
         for bit in bitvals:
             index += 1
             x = index / height
             y = index % height
-            # modify the red value
+            # modify the red value's parity
             pix_r = pix[x,y][0]
             if bit:
                 pix_r |= 1
@@ -81,10 +91,12 @@ class ImgEncoder:
             pix[x,y] = (pix_r, pix[x,y][1], pix[x,y][2])
 
     def decode(self, priv_key):
+        """Read the encrypted message from the image and decrypt it."""
         enc_pix = self.img.load()
 
         width, height = self.img.size
         
+        # Read the number of chunks in the message
         num_chunks = 0
         for index in range(32):
             num_chunks <<= 1
@@ -94,13 +106,14 @@ class ImgEncoder:
                 num_chunks += 1
 
         index = 32
-        size = KEY_SIZE
         plain_chunks = []
+        # Iterate over chunks
         for _ in range(num_chunks):
             chunk = ''
             mod_8 = 0
             byte = 0
-            for _ in range(size):
+            # Create chunk
+            for _ in range(KEY_SIZE):
                 x = index / height
                 y = index % height
                 byte <<= 1
@@ -112,6 +125,7 @@ class ImgEncoder:
                 else:
                     mod_8 += 1
                 index += 1
+            # Decrypt chunk
             plain_chunks.append(priv_key.decrypt(chunk))
         return ''.join(plain_chunks)
                 
@@ -120,6 +134,7 @@ class ImgEncoder:
         self.img.save(outfile, "BMP")
 
 def main_decode(encoded_img, out_file, priv_key):
+    """Decode the given image and write the result to the file."""
     print 'decoding...'
     decoder = ImgEncoder(Image.open(encoded_img))
     plaintext = decoder.decode(priv_key)
@@ -128,6 +143,7 @@ def main_decode(encoded_img, out_file, priv_key):
         f.write(plaintext)
 
 def main_encode(plain_img, out_img, in_txt, pub_key):
+    """Encode the given text on a copy of plain_img and write it to out_img.""" 
     print 'encoding...'
     encoder = ImgEncoder(Image.open(plain_img))
     encoder.encode(in_txt, pub_key)
@@ -135,6 +151,7 @@ def main_encode(plain_img, out_img, in_txt, pub_key):
     encoder.save(out_img)
 
 def print_usage():
+    """Prints the usage"""
     print 'USAGE: python watermark.py encode plain_img out_img in_txt pub_key'
     print '       python watermark.py decode encoded_img out_file priv_key'
     sys.exit(1)
@@ -162,7 +179,7 @@ if __name__ == "__main__":
             with open(argv[4], 'rU') as privfile:
                 private = RSA.importKey(privfile.read())
         except (ValueError, IndexError, TypeError):
-            print 'invalid public key file'
+            print 'invalid private key file'
             sys.exit(1)
         main_decode(argv[2], argv[3], private)
     else:

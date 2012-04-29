@@ -1,3 +1,5 @@
+"""A script for generating a public-private keypair."""
+
 from Crypto.PublicKey import RSA
 from Crypto import Random
 
@@ -6,6 +8,7 @@ import sys
 KEY_SIZE = 1024
 
 def print_usage():
+    """Prints the usage."""
     print 'USAGE: python genkeys.py pub_file priv_file'
     sys.exit(1)
 
